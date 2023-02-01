@@ -12,6 +12,10 @@ config LIBUKTEST_ALL
 	select LIBUKTEST_TEST_MYSELF
 	default y
 
+config LIBUKTEST_RUN_GCOV
+	bool "Run gcov on tests"
+	default n
+
 config LIBUKTEST_FAILFAST
 	bool "Crash on first test failure"
 	default n

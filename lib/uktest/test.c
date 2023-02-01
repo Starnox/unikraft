@@ -213,6 +213,9 @@ uk_testsuite_run(struct uk_testsuite *suite)
 		testsuite_stats.success++;
 #endif /* CONFIG_LIBUKTEST_LOG_STATS */
 
+#ifdef LIBUKTEST_RUN_GCOV
+	__gcov_exit();
+
 EXIT:
 	return ret;
 
