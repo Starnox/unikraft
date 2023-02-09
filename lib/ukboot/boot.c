@@ -219,6 +219,27 @@ void ukplat_entry(int argc, char *argv[])
 	/* Enable interrupts before starting the application */
 	ukplat_lcpu_enable_irq();
 
+	uk_pr_info("Pre-init table at %p - %p\n",
+		   &__preinit_array_start[0], &__preinit_array_end);
+	uk_ctortab_foreach(ctorfn,
+			   __preinit_array_start, __preinit_array_end) {
+		if (!*ctorfn)
+			continue;
+
+		uk_pr_debug("Call pre-init constructor: %p()...\n", *ctorfn);
+		(*ctorfn)();
+	}
+
+	uk_pr_info("Constructor table at %p - %p\n",
+		   &__init_array_start[0], &__init_array_end);
+	uk_ctortab_foreach(ctorfn, __init_array_start, __init_array_end) {
+		if (!*ctorfn)
+			continue;
+
+		uk_pr_debug("Call constructor: %p()...\n", *ctorfn);
+		(*ctorfn)();
+	}
+
 	/**
 	 * Run init table
 	 */
@@ -252,26 +273,7 @@ void ukplat_entry(int argc, char *argv[])
 	 * mimic what a regular user application (e.g., BSD, Linux) would expect
 	 * from its OS being initialized.
 	 */
-	uk_pr_info("Pre-init table at %p - %p\n",
-		   &__preinit_array_start[0], &__preinit_array_end);
-	uk_ctortab_foreach(ctorfn,
-			   __preinit_array_start, __preinit_array_end) {
-		if (!*ctorfn)
-			continue;
-
-		uk_pr_debug("Call pre-init constructor: %p()...\n", *ctorfn);
-		(*ctorfn)();
-	}
-
-	uk_pr_info("Constructor table at %p - %p\n",
-		   &__init_array_start[0], &__init_array_end);
-	uk_ctortab_foreach(ctorfn, __init_array_start, __init_array_end) {
-		if (!*ctorfn)
-			continue;
-
-		uk_pr_debug("Call constructor: %p()...\n", *ctorfn);
-		(*ctorfn)();
-	}
+	
 
 	uk_pr_info("Calling main(%d, [", argc);
 	for (i = 0; i < argc; ++i) {

@@ -238,6 +238,11 @@ struct uk_assert {
 extern struct uk_assert uk_asserttab_start[];
 extern struct uk_assert uk_asserttab_end[];
 
+/**
+ * Reference to gcov exit function.
+*/
+extern void __gcov_exit(void);
+
 
 /**
  * struct uk_testcase - An individual test case.
