@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2023, Unikraft GmbH and The Unikraft Authors.
+# Licensed under the MIT License (the "License", see COPYING.md).
+# You may not use this file except in compliance with the License.
+
+################################################################################
+# GCC version check
+################################################################################
+$(call error_if_gcc_version_lt,13,0)
+
+################################################################################
+# Library registration
+################################################################################
+$(eval $(call addlib_s,libgcov,$(CONFIG_LIBGCOV)))
+
+################################################################################
+# Library includes
+################################################################################
+CINCLUDES-y += -I$(LIBGCOV_BASE)/include
+LIBGCOV_SRCS-y += $(LIBGCOV_BASE)/ukgcov.c
+
+################################################################################
+# Library flags
+################################################################################
+CFLAGS-$(CONFIG_LIBGCOV) += --coverage -fprofile-info-section
+LDFLAGS-$(CONFIG_LIBGCOV) += --coverage
+
+LIBGCOV_CFLAGS-$(CONFIG_LIBGCOV_OUTPUT_SERIAL_HEXDUMP)     += -DGCOV_OPT_OUTPUT_SERIAL_HEXDUMP
+LIBGCOV_CFLAGS-$(CONFIG_LIBGCOV_OUTPUT_BINARY_FILE)        += -DGCOV_OPT_OUTPUT_BINARY_FILE
+LIBGCOV_CFLAGS-$(CONFIG_LIBGCOV_OUTPUT_BINARY_MEMORY)      += -DGCOV_OPT_OUTPUT_BINARY_MEMORY
+
+ifneq ($(CONFIG_LIBGCOV_OUTPUT_BINARY_FILENAME),)
+LIBGCOV_CFLAGS-y                                           += -DGCOV_OUTPUT_BINARY_FILENAME=\"$(CONFIG_LIBGCOV_OUTPUT_BINARY_FILENAME)\"
+endif
+
+################################################################################
+# Linker script
+################################################################################
+EACHOLIB_SRCS-$(CONFIG_LIBGCOV) += $(LIBGCOV_BASE)/libgcov.lds.S
