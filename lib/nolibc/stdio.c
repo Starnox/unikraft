@@ -59,6 +59,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <errno.h>
+#include <fcntl.h>
 
 #include <uk/plat/console.h>
 
@@ -80,7 +82,7 @@ static char const hex2ascii_data[] = "0123456789abcdefghijklmnopqrstuvwxyz";
  * The buffer pointed to by `nbuf' must have length >= MAXNBUF.
  */
 static inline char *ksprintn(char *nbuf, uintmax_t num, int base, int *lenp,
-			     int upper)
+				 int upper)
 {
 	char *p, c;
 
@@ -541,3 +543,78 @@ int puts(const char *s)
 {
 	return fputs_internal(s, stdout, 1);
 }
+
+#if CONFIG_LIBVFSCORE
+
+int __fmodeflags(const char *mode)
+{
+	int flags;
+
+	if (strchr(mode, '+'))
+		flags = O_RDWR;
+	else if (*mode == 'r')
+		flags = O_RDONLY;
+	else
+		flags = O_WRONLY;
+	if (strchr(mode, 'x'))
+		flags |= O_EXCL;
+	if (strchr(mode, 'e'))
+		flags |= O_CLOEXEC;
+	if (*mode != 'r')
+		flags |= O_CREAT;
+	if (*mode == 'w')
+		flags |= O_TRUNC;
+	if (*mode == 'a')
+		flags |= O_APPEND;
+	return flags;
+}
+
+struct vfscore_file *fopen(const char *pathname, const char *mode)
+{
+	struct vfscore_file *f;
+	int flags;
+	int fd;
+
+	if (!strchr("rwa", *mode)) {
+		errno = EINVAL;
+		return 0;
+	}
+
+	flags = __fmodeflags(mode);
+	fd = open(pathname, flags, 0666);
+
+	return vfscore_get_file(fd);
+}
+
+int feof(struct vfscore_file *stream)
+{
+	return 0;
+}
+
+int fclose(struct vfscore_file *stream)
+{
+	return close(stream->fd);
+}
+
+struct vfscore_file *fdopen(int fd, const char *mode)
+{
+	return vfscore_get_file(fd);
+}
+
+int fseek(struct vfscore_file *stream, long offset, int whence)
+{
+	return lseek(stream->fd, offset, whence);
+}
+
+size_t fread(void *ptr, size_t size, size_t nmemb, struct vfscore_file *stream)
+{
+	return read(stream->fd, ptr, size * nmemb);
+}
+
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, struct vfscore_file *stream)
+{
+	if (!stream)
+		return 0;
+	return write(stream->fd, ptr, size * nmemb);
+}
+#endif

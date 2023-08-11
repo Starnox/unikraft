@@ -36,6 +36,11 @@
 
 #include <uk/essentials.h>
 
+
+#if CONFIG_LIBVFSCORE
+#include <vfscore/file.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -93,6 +98,13 @@ int puts(const char *s);
 
 #if CONFIG_LIBVFSCORE
 int rename(const char *oldpath, const char *newpath);
+int feof(struct vfscore_file *stream);
+int fseek(struct vfscore_file *stream, long offset, int whence);
+int fclose(struct vfscore_file *stream);
+struct vfscore_file *fopen(const char *pathname, const char *mode);
+struct vfscore_file *fdopen(int fd, const char *mode);
+size_t fread(void *ptr, size_t size, size_t nmemb, struct vfscore_file *stream);
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, struct vfscore_file *stream);
 #endif
 
 #ifdef __STDIO_H_DEFINED_va_list
